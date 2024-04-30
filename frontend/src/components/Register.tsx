@@ -36,6 +36,8 @@ const Register = () => {
   };
 
   return (
+    <div className="home-container">
+      <div className="home-background"></div>
     <div className="flex items-center justify-center h-screen">
       <div className="bg-white p-8 rounded-lg shadow-lg">
         <h2 className="text-2xl font-bold mb-4">Register</h2>
@@ -95,6 +97,7 @@ const Register = () => {
           </p>
         </div>
       </div>
+    </div>
     </div>
   );
 };
