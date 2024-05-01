@@ -55,8 +55,12 @@ const handleAddMoreIngredients = () => {
   };
 
   return (
+    <div className="home-container">
+      <div className="home-background"></div>
     <div className="container mx-auto px-4 py-8">
-      <h2 className="text-3xl font-semibold mb-4">Add Recipe</h2>
+    <div className="centered-container">
+    <div className="recipes-box">
+      <h2 className="text-3xl font-semibold mb-4">Add Recipe</h2></div></div>
       <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">Title:</label>
@@ -143,6 +147,7 @@ const handleAddMoreIngredients = () => {
           Submit
         </button>
       </form>
+    </div>
     </div>
   );
 };
