@@ -107,9 +107,9 @@ const handleAddMoreIngredients = () => {
   
       // AWS S3 config
       AWS.config.update({
-        accessKeyId: 'AKIA3FLD4TQH5EY6AUHV',
-        secretAccessKey: 'zYJYpAdhpx1jh6v0tVnLSZLm3LBHyTNADB/Ing1O',
-        region :'us-east-2'
+        accessKeyId: 'your-key',
+        secretAccessKey: 'your key',
+        region :'your region'
       });
   
       const s3 = new AWS.S3();

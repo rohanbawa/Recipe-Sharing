@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useAuth } from './authContext';
 
 
+
 interface RecipeCardProps {
   recipe: {
     recipe_id: number;
@@ -15,6 +16,8 @@ interface RecipeCardProps {
   };
 }
 
+
+
 interface Comment {
   comment_id: number;
   comment_text: string;
@@ -24,7 +27,7 @@ interface Comment {
 const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState('');
-  const { user } = useAuth();
+  const { user,loggedIn } = useAuth();
 
   useEffect(() => {
     fetchComments();
@@ -70,23 +73,30 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
             <strong>Ingredients:</strong> {recipe.ingredients.map((ele,idx)=>(<div key={idx}>{ele}<br></br></div>))}
           </div>
         </div>
-        <div className="comments">
-          <h4 className="font-bold text-lg mb-2">Comments</h4>
-          <ul>
-            {comments.map(comment => (
-              <li key={comment.comment_id}><b>{comment.username} </b>: {comment.comment_text}</li>
-            ))}
-          </ul>
-        </div>
-        <div className="commentInput">
-          <input
-            type="text"
-            placeholder="Add a comment..."
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-          />
-          <button onClick={handleCommentSubmit}>Submit</button>
-        </div>
+        {loggedIn? 
+        <>
+                <div className="comments">
+                <h4 className="font-bold text-lg mb-2">Comments</h4>
+                <ul>
+                  {comments.map(comment => (
+                    <li key={comment.comment_id}><b>{comment.username} </b>: {comment.comment_text}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="commentInput">
+                <input
+                  type="text"
+                  placeholder="Add a comment..."
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                />
+                <button onClick={handleCommentSubmit}>Submit</button>
+              </div>
+        </>
+        :
+        <></>
+        }
+
         <p className="text-right text-gray-700">
             {recipe.created_at.slice(0,10)}
           </p>
