@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' }); // Specify the destination directory for file uploads
 const secretKey = 'FinalProject@1234';
+const bcrypt = require('bcrypt');
 const app = express();
 const port = 3000;
 
@@ -84,49 +85,62 @@ app.use(bodyParser.json());
 
 // User Management
 app.post('/api/register', (req, res) => {
-    const { username, email, password } = req.body;
-    if (!username || !email || !password) {
-      return res.status(400).send('All fields are required');
-    }
-    const query = 'INSERT INTO Users (username, email, password_hash) VALUES (?, ?, ?)';
-    connection.query(query, [username, email, password], (err, results) => {
+  const { username, email, password } = req.body;
+  if (!username || !email || !password) {
+    return res.status(400).send('All fields are required');
+  }
+
+  // Hash the password
+  bcrypt.hash(password, 10, (err, hashedPassword) => {
       if (err) {
-        console.error('Error registering user: ', err);
-        return res.status(500).send('Error registering user');
+          console.error('Error hashing password: ', err);
+          return res.status(500).send('Error registering user');
       }
-      res.status(201).send('User registered successfully');
-    });
+
+      const query = 'INSERT INTO Users (username, email, password_hash) VALUES (?, ?, ?)';
+      connection.query(query, [username, email, hashedPassword], (err, results) => {
+          if (err) {
+              console.error('Error registering user: ', err);
+              return res.status(500).send('Error registering user');
+          }
+          res.status(201).send('User registered successfully');
+      });
   });
-  
+});
 
 
-  app.post('/api/login', (req, res) => {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).send('Email and password are required');
+app.post('/api/login', (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).send('Email and password are required');
+  }
+  const query = 'SELECT * FROM users WHERE email = ?';
+  connection.query(query, [email], (err, results) => {
+    if (err) {
+      console.error('Error logging in: ', err);
+      return res.status(500).send('Error logging in');
     }
-    const query = 'SELECT * FROM users WHERE email = ? AND password_hash = ?';
-    connection.query(query, [email, password], (err, results) => {
-      if (err) {
-        console.error('Error logging in: ', err);
+    if (results.length === 0) {
+      return res.status(401).send('Invalid email or password');
+    }
+    // Compare the hashed password from the database with the provided password
+    const user = results[0];
+    bcrypt.compare(password, user.password_hash, (bcryptErr, bcryptResult) => {
+      if (bcryptErr) {
+        console.error('Error comparing passwords: ', bcryptErr);
         return res.status(500).send('Error logging in');
       }
-      if (results.length === 0) {
+      if (!bcryptResult) {
         return res.status(401).send('Invalid email or password');
       }
-      // User authentication successful, generate JWT token
-      const user = results[0];
+      // Passwords match, generate JWT token
       const token = generateToken(user);
       // Return both user details and token
       res.status(200).json({ user, token });
     });
   });
-  
-
-
-app.post('/api/logout', (req, res) => {
-  // Implementation for user logout
 });
+  
 
 // Recipe Management
 app.get('/api/recipes', (req, res) => {
@@ -200,19 +214,6 @@ app.post('/api/recipes/create', (req, res) => {
 
 
 
-app.put('/api/recipes/update/:id/', (req, res) => {
-  const recipeId = req.params.id;
-  const { ingredients, instructions } = req.body;
-  const query = 'UPDATE recipes SET ingredients = ?, instructions = ? WHERE recipe_id = ?';
-  connection.query(query, [ingredients, instructions, recipeId], (err, results) => {
-    if (err) {
-      console.error('Error updating recipe: ', err);
-      return res.status(500).send('Error updating recipe');
-    }
-    res.status(200).send('Recipe updated successfully');
-  });
-});
-
 app.delete('/api/recipes/delete/:id', (req, res) => {
   const recipeId = req.params.id;
   const query = 'DELETE FROM recipes WHERE recipe_id = ?';
@@ -251,21 +252,6 @@ app.post('/api/recipes/:id/comments/create', (req, res) => {
   });
 });
 
-
-app.post('/api/recipes/:id/rate', (req, res) => {
-  const recipeId = req.params.id;
-  const { rating } = req.body;
-
-  // Assuming you have a table named 'ratings' to store ratings for each recipe
-  const query = 'INSERT INTO ratings (recipe_id, rating) VALUES (?, ?)';
-  connection.query(query, [recipeId, rating], (err, results) => {
-    if (err) {
-      console.error('Error rating recipe: ', err);
-      return res.status(500).send('Error rating recipe');
-    }
-    res.status(201).send('Rating added successfully');
-  });
-});
 
 
 // Start the server

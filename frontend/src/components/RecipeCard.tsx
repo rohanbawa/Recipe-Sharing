@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Cookies from 'js-cookie';
 import { useAuth } from './authContext';
+import { Link } from 'react-router-dom';
 
 
 
@@ -46,8 +48,8 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
     try {
       await axios.post(`/api/recipes/${recipe.recipe_id}/comments/create`, {
         comment_text: commentText,
-        user_id: user?.user_id,
-        username: user?.username
+        user_id: Cookies.get('user_id'),
+        username: Cookies.get('username')
         , // Replace with the actual user ID
       });
       setCommentText('');
@@ -63,16 +65,19 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
         <img src={recipe.image} alt={recipe.title} />
       </div>
       <div className="recipeContent">
-        <div className="title">
-          <h3 className="font-bold text-xl mb-2">{recipe.title}</h3>
-          <p className="text-gray-700 text-base mb-4">{recipe.description}</p>
-          <div className="font-bold text-xl mb-2">Instructions <br></br>
-          <p className="text-gray-700 text-base mb-4" >{recipe.Instruction}</p>          
+        <div className="titles">
+          <div>
+          <div className="font-bold text-3xl py-1">{recipe.title}</div>
+          <div className="text-gray-700 text-base text-md  ">{recipe.description}</div>
+          <div className="font-bold text-md mt-2 "><b>Instructions: </b><br></br>
+          <p className="text-slate-900 text-base text-md" >{recipe.Instruction}</p>          
           </div>
-          <div className="text-gray-700">
-            <strong>Ingredients:</strong> {recipe.ingredients.map((ele,idx)=>(<div key={idx}>{ele}<br></br></div>))}
+          </div>
+          <div className="text-slate-900 text-xl ml-3 px-4">
+            <b>Ingredients:</b> {recipe.ingredients.map((ele,idx)=>(<div className='text-lg p-1' key={idx}>{ele}<br></br></div>))}
           </div>
         </div>
+        <div>
         {loggedIn? 
         <>
                 <div className="comments">
@@ -85,22 +90,27 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
               </div>
               <div className="commentInput">
                 <input
+                  className='input-comment'
                   type="text"
                   placeholder="Add a comment..."
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                 />
-                <button onClick={handleCommentSubmit}>Submit</button>
+                <button className='btn-comment' onClick={handleCommentSubmit}>ADD</button>
               </div>
         </>
         :
-        <></>
+        <>
+        <Link to="/login"><h1><i>Please Login to Add Comments</i></h1></Link></>
         }
 
         <p className="text-right text-gray-700">
             {recipe.created_at.slice(0,10)}
           </p>
-      </div>
+          </div>
+
+        </div>
+
     </div>
   );
 };

@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom'; 
 import { useAuth } from './authContext';
-import { toast } from 'react-toastify';
-
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -30,35 +28,34 @@ const Login = () => {
     }));
   };
 
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const validatePassword = (password) => {
-    return password.length >= 8;
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    let formIsValid = true;
-    const newErrors = { email: '', password: '' };
-
-    if (!validateEmail(formData.email)) {
-      newErrors.email = 'Invalid email address';
-      
-      formIsValid = false;
+    if (!formData.email.trim()) {
+      setErrors(prevState => ({
+        ...prevState,
+        email: 'Email is required'
+      }));
+    } else {
+      setErrors(prevState => ({
+        ...prevState,
+        email: ''
+      }));
     }
 
-    if (!validatePassword(formData.password)) {
-      newErrors.password = 'Password must be at least 8 characters long';
-      formIsValid = false;
+    if (!formData.password.trim()) {
+      setErrors(prevState => ({
+        ...prevState,
+        password: 'Password is required'
+      }));
+    } else {
+      setErrors(prevState => ({
+        ...prevState,
+        password: ''
+      }));
     }
 
-    setErrors(newErrors);
-    
-    if (formIsValid) {
+    if (formData.email.trim() && formData.password.trim()) {
       login(formData.email, formData.password);
     }
   };

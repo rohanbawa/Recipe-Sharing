@@ -2,6 +2,8 @@ import { useEffect , useState} from 'react';
 import axios from 'axios'; // Import Axios for making HTTP requests
 import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from './authContext';
 
 interface Post {
   recipe_id: number;
@@ -14,11 +16,19 @@ interface Post {
 }
 
 const Profile = () => {
+  const { loggedIn } = useAuth();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
 
+  useEffect(()=>{
+    if (!loggedIn) {
+      navigate('/login'); // Redirect to login if user is not logged in
+    } 
+  })
+
   useEffect(() => {
-    fetchPosts();
-  }, []);
+      fetchPosts();
+  }, [loggedIn, navigate]);
 
   const fetchPosts = async () => {
     try {
@@ -64,18 +74,23 @@ const Profile = () => {
             <span className="profile-text">{Cookies.get('email')}</span>
           </div>
         </div>
-        <div>
-          {posts.map(post => (
+        <div className="post-grid">
+          {posts.map((post) => (
             <div key={post.recipe_id} className="post-card">
-              <img src={post.image} alt={post.title} className="post-image" />
+              <div className="post-image-container">
+                <img src={post.image} alt={post.title} className="post-image" />
+              </div>
               <div className="post-content">
                 <h3 className="post-title">{post.title}</h3>
                 <p className="post-description">{post.description}</p>
-                <button onClick={() => handleDelete(post.recipe_id)} className="delete-button">Delete</button>
+                <button onClick={() => handleDelete(post.recipe_id)} className="delete-button">
+                  Delete
+                </button>
               </div>
             </div>
           ))}
         </div>
+
       </div>
     </div>
   );

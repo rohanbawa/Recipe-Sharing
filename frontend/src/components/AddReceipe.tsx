@@ -1,9 +1,10 @@
 import './init'
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import AWS from 'aws-sdk'
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
+import { useAuth } from './authContext'; 
 
 const AddRecipe = () => {
   const [recipeData, setRecipeData] = useState({
@@ -14,6 +15,7 @@ const AddRecipe = () => {
     image: ''
   });
 
+  const { loggedIn } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e:any) => {
@@ -23,6 +25,11 @@ const AddRecipe = () => {
       [name]: value
     }));
   };
+  useEffect(()=>{
+    if (!loggedIn) {
+      navigate('/login'); // Redirect to login if user is not logged in
+    } 
+  })
 
   const handleIngredientChange = (index, field, value) => {
     const newIngredients = [...recipeData.ingredients];
@@ -52,7 +59,10 @@ const handleAddMoreIngredients = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+if (!loggedIn) {
+      navigate('/login'); // Redirect to login if user is not logged in
+      return;
+    }
     if (!recipeData.image) {
       toast.error('Iamge Not Uploaded');
       return;
@@ -107,16 +117,16 @@ const handleAddMoreIngredients = () => {
   
       // AWS S3 config
       AWS.config.update({
-        accessKeyId: 'your-key',
-        secretAccessKey: 'your key',
-        region :'your region'
+        accessKeyId: 'Enter your key',
+        secretAccessKey: 'Enter Your Key',
+        region :'Enter Your Region'
       });
   
       const s3 = new AWS.S3();
       const file = recipeData.image;
   
       const params = {
-        Bucket: 'recipemanagementimages',
+        Bucket: 'Enter your Bucket name',
         Key: `images/${file.name}`,
         Body: file,
         ACL: 'public-read',
