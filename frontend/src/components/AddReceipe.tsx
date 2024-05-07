@@ -1,13 +1,20 @@
+import './init'
 import React, { useState } from 'react';
+import AWS from 'aws-sdk'
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import Cookies from 'js-cookie';
 
 const AddRecipe = () => {
   const [recipeData, setRecipeData] = useState({
     title: '',
     description: '',
+    Instructions:'',
     ingredients: [{ item: '', quantity: '' }],
-    image: null,
-    video: null
+    image: ''
   });
+
+  const navigate = useNavigate();
 
   const handleChange = (e:any) => {
     const { name, value } = e.target;
@@ -39,20 +46,97 @@ const handleAddMoreIngredients = () => {
       ...prevState,
       image: e.target.files[0]
     }));
+    console.log(e.target.files[0])
   };
 
-  const handleVideoChange = (e:any) => {
-    setRecipeData(prevState => ({
-      ...prevState,
-      video: e.target.files[0]
-    }));
-  };
 
-  const handleSubmit = (e:any) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add your logic to submit recipe data
-    console.log(recipeData);
+
+    if (!recipeData.image) {
+      toast.error('Iamge Not Uploaded');
+      return;
+    }
+
+    if (!recipeData.title || !recipeData.description || !recipeData.Instructions || recipeData.ingredients.some((ingredient) => !ingredient.item || !ingredient.quantity)) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    try {
+      const requestData = {
+        title: recipeData.title,
+        description: recipeData.description,
+        user_id: Cookies.get('user_id'),
+        image: recipeData.image,
+        Instructions:recipeData.Instructions,
+        ingredients: recipeData.ingredients
+      };
+  
+      const response = await fetch('/api/recipes/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      });
+  
+      if (response.ok) {
+        console.log('Recipe created successfully');
+        toast.success('Recipe created successfully');
+        navigate('/');
+        // Optionally reset form state here
+      } else {
+        console.error('Error creating recipe client');
+        console.log(requestData);
+        toast.error('Error creating recipe client');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error(error?.response.data);
+    }
   };
+  
+
+  const handleAddImageClick = async () => {
+    try {
+      if (!recipeData.image) {
+        toast.error('Iamge Not Uploaded');
+        return;
+      }
+  
+      // AWS S3 config
+      AWS.config.update({
+        accessKeyId: 'AKIA3FLD4TQH5EY6AUHV',
+        secretAccessKey: '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',
+        region :'us-east-2'
+      });
+  
+      const s3 = new AWS.S3();
+      const file = recipeData.image;
+  
+      const params = {
+        Bucket: 'recipemanagementimages',
+        Key: `images/${file.name}`,
+        Body: file,
+        ACL: 'public-read',
+      };
+  
+      // s3 file upload
+      const data = await s3.upload(params).promise();
+  
+      console.log('File uploaded successfully:', data.Location);
+      toast.success('File uploaded successfully');
+  
+      setRecipeData(prevState => ({
+        ...prevState,
+        image: data.Location
+      }));
+    } catch (error) {
+      console.error('Error uploading file:', error);
+    }
+  };
+
 
   return (
     <div className="home-container">
@@ -83,6 +167,18 @@ const handleAddMoreIngredients = () => {
             name="description"
             placeholder="Enter description"
             value={recipeData.description}
+            onChange={handleChange}
+            required
+          ></textarea>
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Instructions">Instruction:</label>
+          <textarea
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            id="Instructions"
+            name="Instructions"
+            placeholder="Enter Instructions"
+            value={recipeData.Instructions}
             onChange={handleChange}
             required
           ></textarea>
@@ -128,17 +224,14 @@ const handleAddMoreIngredients = () => {
             onChange={handleImageChange}
             required
           />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="video">Video:</label>
-          <input
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            id="video"
-            name="video"
-            type="file"
-            accept="video/*"
-            onChange={handleVideoChange}
-          />
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-2"
+            type="button"
+            onClick={handleAddImageClick}
+            >
+            Add Image
+            </button>
+
         </div>
         <button
           className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"

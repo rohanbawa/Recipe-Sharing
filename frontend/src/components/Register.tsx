@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -29,43 +30,10 @@ const Register = () => {
   };
 
   return (
-    <div>
-      <h2>Register</h2>
-      <form onSubmit={handleSubmit}>
-        <input type="text" name="username" placeholder="Username" value={formData.username} onChange={handleChange} />
-        <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} />
-        <input type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} />
-        <button type="submit">Register</button>
-      </form>
-    </div>
-  );
-};
-
-
-export default Register;
-*/
-
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-
-// import './header.css'; // Import your CSS file
-
-const Register = () => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  const handleRegister = (e) => {
-    e.preventDefault();
-    // Implement registration functionality here
-    console.log('Register clicked');
-  };
-
-  return (
     <div className="flex items-center justify-center h-screen">
       <div className="bg-white p-8 rounded-lg shadow-lg">
         <h2 className="text-2xl font-bold mb-4">Register</h2>
-        <form onSubmit={handleRegister}>
+        <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="username" className="block text-gray-700 font-bold mb-2">
               Username
@@ -74,8 +42,8 @@ const Register = () => {
               type="text"
               id="username"
               name="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={formData.username}
+              onChange={handleChange}
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -84,11 +52,12 @@ const Register = () => {
               Email
             </label>
             <input
+
               type="email"
               id="email"
               name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.email}
+              onChange={handleChange}
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -100,8 +69,8 @@ const Register = () => {
               type="password"
               id="password"
               name="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={formData.password}
+              onChange={handleChange}
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -125,4 +94,29 @@ const Register = () => {
   );
 };
 
+
 export default Register;
+// */
+
+// import { useState } from 'react';
+// import { Link } from 'react-router-dom';
+
+// // import './header.css'; // Import your CSS file
+
+// const Register = () => {
+//   const [username, setUsername] = useState('');
+//   const [email, setEmail] = useState('');
+//   const [password, setPassword] = useState('');
+
+//   const handleRegister = (e) => {
+//     e.preventDefault();
+//     // Implement registration functionality here
+//     console.log('Register clicked');
+//   };
+
+//   return (
+
+//   );
+// };
+
+// export default Register;

@@ -7,12 +7,17 @@ import Login from './components/Login';
 import Register from './components/Register';
 import AddReceipe from './components/AddReceipe';
 import ReceipeDetail from './components/ReceipeDetail';
+import { AuthProvider } from './components/authContext';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 
 function App() {
   return (
     <Router>
-      <div>
+      <AuthProvider>
+      
         <Header />
         <Routes>
           <Route path="/" element={<Home />} />
@@ -23,7 +28,8 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           {/* Add more routes as needed */}
         </Routes>
-      </div>
+      <ToastContainer theme="colored" />
+      </AuthProvider>
     </Router>
   );
 }

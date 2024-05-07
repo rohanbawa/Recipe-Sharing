@@ -1,56 +1,82 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect , useState} from 'react';
+import axios from 'axios'; // Import Axios for making HTTP requests
+import Cookies from 'js-cookie';
+import { toast } from 'react-toastify';
+
+interface Post {
+  recipe_id: number;
+  title: string;
+  description: string;
+  Instruction: string;
+  user_id: number;
+  image: string;
+  created_at: Date;
+}
 
 const Profile = () => {
-  const [userData, setUserData] = useState({
-    user_id: '',
-    username: '',
-    email: '',
-    profile_details: ''
-  });
+  const [posts, setPosts] = useState<Post[]>([]);
 
   useEffect(() => {
-    // Fetch user data from backend or any source
-    fetchUserData();
+    fetchPosts();
   }, []);
 
-  const fetchUserData = () => {
-    // Example: Fetch user data from backend API
-    const mockUserData = {
-      user_id: '1',
-      username: 'JohnDoe',
-      email: 'john@example.com',
-      profile_details: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla ac libero vitae nisi volutpat cursus. Sed venenatis justo sed lacinia semper.'
-    };
+  const fetchPosts = async () => {
+    try {
+      const response = await axios.get(`/api/recipes/${Cookies.get("user_id")}`);
+      setPosts(response.data);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      // Handle error
+    }
+  };
 
-    setUserData(mockUserData);
+  const handleDelete = async (postId: number) => {
+    try {
+      const response = await axios.delete(`/api/recipes/delete/${postId}`);
+      if (response.status === 200) {
+        // Remove the deleted post from the state
+        setPosts(posts.filter(post => post.recipe_id !== postId));
+        toast.success("Post Deleted")
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      // Handle error
+      toast.error("Error deleting post")
+    }
   };
 
   return (
     <div className="home-container">
-    <div className="home-background"></div>
-    <div className="container mx-auto px-4 py-8">
-    <div className="centered-container">
-    <div className="recipes-box">
-      <h2 className="text-3xl font-semibold mb-4">Profile</h2></div></div>
-      <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">User ID:</label>
-          <span className="text-gray-700">{userData.user_id}</span>
+      <div className="profile-background"></div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="centered-container">
+          <div className="profile-box">
+            <h2 className="text-3xl font-semibold mb-4">Profile</h2>
+          </div>
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">Username:</label>
-          <span className="text-gray-700">{userData.username}</span>
+        <div className="profile-container">
+          <div className="mb-4">
+            <label className="profile-label">Username:</label>
+            <span className="profile-text">{Cookies.get('username')}</span>
+          </div>
+          <div className="mb-4">
+            <label className="profile-label">Email:</label>
+            <span className="profile-text">{Cookies.get('email')}</span>
+          </div>
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">Email:</label>
-          <span className="text-gray-700">{userData.email}</span>
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">Profile Details:</label>
-          <p className="text-gray-700">{userData.profile_details}</p>
+        <div>
+          {posts.map(post => (
+            <div key={post.recipe_id} className="post-card">
+              <img src={post.image} alt={post.title} className="post-image" />
+              <div className="post-content">
+                <h3 className="post-title">{post.title}</h3>
+                <p className="post-description">{post.description}</p>
+                <button onClick={() => handleDelete(post.recipe_id)} className="delete-button">Delete</button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
-    </div>
     </div>
   );
 };

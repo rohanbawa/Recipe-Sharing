@@ -14,3 +14,5 @@ const ReceipeDetail = () => {
 };
 
 export default ReceipeDetail;
+
+

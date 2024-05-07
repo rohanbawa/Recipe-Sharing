@@ -1,8 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2');
+const AWS = require('aws-sdk');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' }); // Specify the destination directory for file uploads
 const secretKey = 'FinalProject@1234';
 const app = express();
 const port = 3000;
@@ -67,6 +70,14 @@ function verifyToken(req, res, next) {
   });
 }
 
+// Configure AWS SDK with your credentials and region
+AWS.config.update({
+  accessKeyId: 'AKIA3FLD4TQH5EY6AUHV',
+  secretAccessKey: 'zYJYpAdhpx1jh6v0tVnLSZLm3LBHyTNADB/Ing1O',
+  region: 'Ohio'
+});
+
+const s3 = new AWS.S3();
 
 // Middleware to parse JSON body
 app.use(bodyParser.json());
@@ -106,9 +117,11 @@ app.post('/api/register', (req, res) => {
       // User authentication successful, generate JWT token
       const user = results[0];
       const token = generateToken(user);
-      res.status(200).json({ token });
+      // Return both user details and token
+      res.status(200).json({ user, token });
     });
   });
+  
 
 
 app.post('/api/logout', (req, res) => {
@@ -128,11 +141,23 @@ app.get('/api/recipes', (req, res) => {
   });
 });
 
+app.get('/api/ingredients', (req, res) => {
+  // Implementation to retrieve all recipes
+  const query = 'SELECT * FROM ingredients';
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error('Error retrieving ingredients: ', err);
+      return res.status(500).send('Error retrieving recipes');
+    }
+    res.status(200).json(results);
+  });
+});
+
 app.get('/api/recipes/:id', (req, res) => {
   // Implementation to retrieve a specific recipe by ID
-  const recipeId = req.params.id;
-  const query = 'SELECT * FROM recipes WHERE recipe_id = ?';
-  connection.query(query, [recipeId], (err, results) => {
+  const userId = req.params.id;
+  const query = 'SELECT * FROM Recipes WHERE user_id = ?';
+  connection.query(query, [userId], (err, results) => {
     if (err) {
       console.error('Error retrieving recipe: ', err);
       return res.status(500).send('Error retrieving recipe');
@@ -140,23 +165,40 @@ app.get('/api/recipes/:id', (req, res) => {
     if (results.length === 0) {
       return res.status(404).send('Recipe not found');
     }
-    res.status(200).json(results[0]);
+    res.status(200).json(results);
   });
 });
 
 
+
 app.post('/api/recipes/create', (req, res) => {
-  // Implementation to create a new recipe
-  const { title, description, ingredients, instructions, userId } = req.body;
-  const query = 'INSERT INTO recipes (title, description, ingredients, instructions, user_id) VALUES (?, ?, ?, ?, ?)';
-  connection.query(query, [title, description, ingredients, instructions, userId], (err, results) => {
+  const { title, description, user_id, image, Instructions } = req.body;
+  const ingredients = req.body.ingredients; // Array of ingredients
+
+  // Insert recipe first
+  const recipeQuery = 'INSERT INTO recipes (title, description, user_id, image, Instruction) VALUES (?, ?, ?, ?,?)';
+  connection.query(recipeQuery, [title, description, user_id, image, Instructions], (err, results) => {
     if (err) {
       console.error('Error creating recipe: ', err);
       return res.status(500).send('Error creating recipe');
     }
-    res.status(201).send('Recipe created successfully');
+    
+    const recipeId = results.insertId;
+
+    // Insert ingredients
+    const ingredientValues = ingredients.map(ingredient => [recipeId, ingredient.item, ingredient.quantity]);
+    const ingredientQuery = 'INSERT INTO ingredients (recipe_id, item, quantity) VALUES ?';
+    connection.query(ingredientQuery, [ingredientValues], (err, results) => {
+      if (err) {
+        console.error('Error adding ingredients: ', err);
+        return res.status(500).send('Error adding ingredients');
+      }
+      res.status(201).send('Recipe created successfully');
+    });
   });
 });
+
+
 
 app.put('/api/recipes/update/:id/', (req, res) => {
   const recipeId = req.params.id;
@@ -171,7 +213,7 @@ app.put('/api/recipes/update/:id/', (req, res) => {
   });
 });
 
-app.delete('/api/recipes/delete/:id/', (req, res) => {
+app.delete('/api/recipes/delete/:id', (req, res) => {
   const recipeId = req.params.id;
   const query = 'DELETE FROM recipes WHERE recipe_id = ?';
   connection.query(query, [recipeId], (err, results) => {
@@ -197,10 +239,10 @@ app.get('/api/recipes/:id/comments', (req, res) => {
 
 
 app.post('/api/recipes/:id/comments/create', (req, res) => {
-  const { comment_text, user_id } = req.body;
+  const { comment_text, user_id, username } = req.body;
   const recipeId = req.params.id;
-  const query = 'INSERT INTO Comments (comment_text, user_id, recipe_id) VALUES (?, ?, ?)';
-  connection.query(query, [comment_text, user_id, recipeId], (err, results) => {
+  const query = 'INSERT INTO Comments (comment_text, user_id, recipe_id, username) VALUES (?, ?, ?, ?)';
+  connection.query(query, [comment_text, user_id, recipeId, username], (err, results) => {
     if (err) {
       console.error('Error adding comment: ', err);
       return res.status(500).send('Error adding comment');
